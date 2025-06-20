@@ -50,8 +50,22 @@ const StreamsDashboard: React.FC = () => {
     }
   };
 
-  const handleJoinStream = (streamId: string): void => {
-    setJoinedStreams(prev => new Set([...prev, streamId]));
+  const handleJoinStream = async (streamId: string): Promise<void> => {
+    try {
+
+      const response = await axios.post<ApiResponse>(
+        `${BASE_URL}/api/stream/join`, { streamId }
+      );
+
+      if (response.data.success) {
+        setJoinedStreams(prev => new Set([...prev, streamId]));
+      }
+    } catch (error) {
+      console.error('Error fetching streams:', error);
+      window.location.href = "/login";
+    }
+
+
 
     // Update the stream's participants count
     setStreams(prevStreams =>
