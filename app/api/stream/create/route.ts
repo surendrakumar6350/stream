@@ -7,13 +7,16 @@ export async function POST(request: Request): Promise<NextResponse> {
         await connectDb();
 
         const body = await request.json();
-        const { price } = body;
+        const { price, host, title, description } = body;
 
-        if (!price || typeof price !== "number") {
-            return NextResponse.json({ success: false, message: "Invalid or missing price" }, { status: 400 });
+        if (!price || typeof price !== "number" || !host || !title || !description) {
+            return NextResponse.json({ success: false, message: "Invalid or missing fields" }, { status: 400 });
         }
 
         const stream = await new Stream({
+            title,
+            description,
+            host,
             price,
             status: "running",
             participants: []
