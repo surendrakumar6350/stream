@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Sidebar from './components/Sidebar';
 import Header from './components/Header';
 import StatsCards from './components/StatsCards';
@@ -17,6 +17,7 @@ const AdminDashboard: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [streams, setStreams] = useState<Stream[]>([]);
+  const isInitialLoad = useRef(true);
 
   const [activeTab, setActiveTab] = useState<'running' | 'stopped' | 'completed'>('running');
   const [selectedStream, setSelectedStream] = useState<Stream | null>(null);
@@ -34,12 +35,20 @@ const AdminDashboard: React.FC = () => {
   });
 
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
     const fetchStreams = async () => {
       try {
-        setLoading(true);
+        if (isInitialLoad.current) {
+          setLoading(true);
+        }
+
         const response = await axios.get(`${BASE_URL}/api/admin/stream/fetch`);
         if (response.data.success) {
-          setStreams(response.data.streams);
+          const updatedStreams = response.data.streams;
+          setStreams(updatedStreams);
+          setError(null);
+
         } else {
           setError("Failed to fetch streams.");
         }
@@ -47,12 +56,19 @@ const AdminDashboard: React.FC = () => {
         console.error(err);
         setError("Something went wrong.");
       } finally {
-        setLoading(false);
+        if (isInitialLoad.current) {
+          setLoading(false);
+          isInitialLoad.current = false;
+        }
       }
     };
 
     fetchStreams();
+    intervalId = setInterval(fetchStreams, 5000);
+
+    return () => clearInterval(intervalId);
   }, []);
+
 
   const handleCreateStream = async () => {
     if (!createForm.title || !createForm.description || !createForm.price || !createForm.host) {
@@ -66,9 +82,9 @@ const AdminDashboard: React.FC = () => {
         alert("Try again");
         return;
       }
-      const newStream = response.data.stream;
+      const newStream = { ...response.data.stream, id: response.data.stream._id, _id: undefined };
 
-      setStreams(prev => [...prev, newStream]);
+      setStreams(prev => [newStream, ...prev]);
       setCreateForm({ title: '', description: '', price: '', host: '' });
       setShowCreateForm(false);
     } catch (error: any) {
@@ -174,7 +190,10 @@ const AdminDashboard: React.FC = () => {
         spinning={spinning}
         winner={winner}
         spinRotation={spinRotation}
-        onClose={() => setShowSpinner(false)}
+        onClose={() => {
+          setShowSpinner(false);
+          setWinner(null);
+        }}
         onSpin={spinWheel}
       />
     </div>
