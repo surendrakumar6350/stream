@@ -4,10 +4,10 @@ import type { Stream } from '../types';
 
 interface StreamsTableProps {
   streams: Stream[];
-  activeTab: 'active' | 'suspended' | 'completed';
-  onTabChange: (tab: 'active' | 'suspended' | 'completed') => void;
+  activeTab: 'running' | 'stopped' | 'completed';
+  onTabChange: (tab: 'running' | 'stopped' | 'completed') => void;
   onViewStream: (stream: Stream) => void;
-  onStatusChange: (streamId: string, newStatus: 'suspended' | 'completed') => void;
+  onStatusChange: (streamId: string, newStatus: 'stopped' | 'completed') => void;
 }
 
 const StreamsTable: React.FC<StreamsTableProps> = ({
@@ -18,27 +18,23 @@ const StreamsTable: React.FC<StreamsTableProps> = ({
   onStatusChange
 }) => {
   const formatPrice = (price: number): string => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0
-    }).format(price / 100);
+    return price.toString();
   };
 
   const formatDate = (dateString: string): string => {
     return new Date(dateString).toLocaleDateString();
   };
 
-  const filteredStreams = streams.filter(stream => 
+  const filteredStreams = streams.filter(stream =>
     activeTab === 'completed' ? stream.status === 'completed' :
-    activeTab === 'suspended' ? stream.status === 'suspended' :
-    stream.status === 'active'
+      activeTab === 'stopped' ? stream.status === 'stopped' :
+        stream.status === 'running'
   );
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'active': return 'text-green-400 bg-green-500/20';
-      case 'suspended': return 'text-yellow-400 bg-yellow-500/20';
+      case 'running': return 'text-green-400 bg-green-500/20';
+      case 'stopped': return 'text-yellow-400 bg-yellow-500/20';
       case 'completed': return 'text-blue-400 bg-blue-500/20';
       default: return 'text-gray-400 bg-gray-500/20';
     }
@@ -52,20 +48,19 @@ const StreamsTable: React.FC<StreamsTableProps> = ({
 
       {/* Tabs */}
       <div className="flex gap-2 mb-6 overflow-x-auto">
-        {(['active', 'suspended', 'completed'] as const).map((tab) => (
+        {(['running', 'stopped', 'completed'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => onTabChange(tab)}
-            className={`px-3 lg:px-4 py-2 rounded-lg capitalize transition-colors whitespace-nowrap text-sm lg:text-base ${
-              activeTab === tab 
-                ? 'bg-purple-600 text-white' 
-                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
-            }`}
+            className={`px-3 lg:px-4 py-2 rounded-lg capitalize transition-colors whitespace-nowrap text-sm lg:text-base ${activeTab === tab
+              ? 'bg-purple-600 text-white'
+              : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+              }`}
           >
-            {tab} ({streams.filter(s => 
+            {tab} ({streams.filter(s =>
               tab === 'completed' ? s.status === 'completed' :
-              tab === 'suspended' ? s.status === 'suspended' :
-              s.status === 'active'
+                tab === 'stopped' ? s.status === 'stopped' :
+                  s.status === 'running'
             ).length})
           </button>
         ))}
@@ -91,7 +86,7 @@ const StreamsTable: React.FC<StreamsTableProps> = ({
                   <span className="hidden lg:block">Created: {formatDate(stream.createdAt)}</span>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-2 self-end lg:self-center">
                 <button
                   onClick={() => onViewStream(stream)}
@@ -100,16 +95,21 @@ const StreamsTable: React.FC<StreamsTableProps> = ({
                 >
                   <Eye className="w-4 h-4" />
                 </button>
-                
-                {stream.status === 'active' && (
+
+                {(stream.status === 'running' || stream.status === 'stopped') && (
                   <>
-                    <button
-                      onClick={() => onStatusChange(stream.id, 'suspended')}
-                      className="p-2 bg-yellow-600 hover:bg-yellow-700 rounded-lg transition-colors"
-                      title="Suspend Stream"
-                    >
-                      <Square className="w-4 h-4" />
-                    </button>
+                    {stream.status === 'running' && (
+                      <button
+                        onClick={() => onStatusChange(stream.id, 'stopped')}
+                        className="group relative p-2 rounded-lg bg-gradient-to-tr from-yellow-500 via-yellow-400 to-yellow-600 hover:from-yellow-400 hover:to-yellow-500 transition-all shadow-md hover:shadow-yellow-300/40"
+                        title="Stop Stream"
+                      >
+                        <Square className="w-4 h-4 text-black group-hover:scale-110 transition-transform" />
+                        <span className="absolute top-full mt-1 text-xs bg-black text-white px-2 py-1 rounded shadow-lg opacity-0 group-hover:opacity-100 transition-opacity">
+                          Stop Stream
+                        </span>
+                      </button>
+                    )}
                     <button
                       onClick={() => onStatusChange(stream.id, 'completed')}
                       className="p-2 bg-green-600 hover:bg-green-700 rounded-lg transition-colors"
@@ -119,6 +119,7 @@ const StreamsTable: React.FC<StreamsTableProps> = ({
                     </button>
                   </>
                 )}
+
               </div>
             </div>
           </div>
