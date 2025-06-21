@@ -65,7 +65,7 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onToggle }) => {
         </div>
 
         {/* Navigation */}
-        <div className="flex-1 h-full px-6 py-8 overflow-y-auto">
+        <div className="flex-1 px-6 py-2 overflow-y-auto">
           <nav className="space-y-3">
             <div className="mb-6">
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider px-3 mb-3">
