@@ -46,13 +46,13 @@ const CreateStreamModal: React.FC<CreateStreamModalProps> = ({
           </div>
           
           <div>
-            <label className="block text-sm font-medium mb-2">Price ($)</label>
+            <label className="block text-sm font-medium mb-2">Price (₹)</label>
             <input
               type="number"
               value={form.price}
               onChange={(e) => onFormChange({ ...form, price: e.target.value })}
               className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm lg:text-base"
-              placeholder="299.99"
+              placeholder="299"
             />
           </div>
           
@@ -63,7 +63,7 @@ const CreateStreamModal: React.FC<CreateStreamModalProps> = ({
               value={form.host}
               onChange={(e) => onFormChange({ ...form, host: e.target.value })}
               className="w-full bg-gray-700 border border-gray-600 rounded-lg px-3 py-2 text-sm lg:text-base"
-              placeholder="Host name"
+              placeholder="Ankit Kumar"
             />
           </div>
         </div>
