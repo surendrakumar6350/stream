@@ -3,7 +3,7 @@ export interface StreamUser {
   name: string;
   upi: string;
   joinedAt: string;
-  avatar?: string;
+  mobile?: string;
 }
 
 export interface Stream {
@@ -11,7 +11,7 @@ export interface Stream {
   title: string;
   description: string;
   price: number;
-  status: 'active' | 'suspended' | 'completed';
+  status: 'running' | 'stopped' | 'completed';
   participants: StreamUser[];
   createdAt: string;
   host: string;
