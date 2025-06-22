@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { connectDb } from "@/dbConnection/connect";
 import { Stream } from "@/dbConnection/Schemas/stream";
+import { Types } from "mongoose";
 
 const JWT_SECRET = process.env.JWT_SECRET || "your_default_secret_key";
 
@@ -25,11 +26,24 @@ export async function GET(): Promise<NextResponse> {
       return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
     }
 
+    const userObjectId = new Types.ObjectId(userId);
+
     const streams = await Stream.find({ status: "running" }).select("-__v");
 
-    return NextResponse.json({ success: true, streams });
+    const enhancedStreams = streams.map(stream => {
+      const joined = stream.participants?.some((id: any) =>
+        id.toString() === userObjectId.toString()
+      );
+      return {
+        ...stream.toObject(),
+        joined: !!joined,
+      };
+    });
+
+    return NextResponse.json({ success: true, streams: enhancedStreams });
   } catch (error) {
     console.error("Get Streams Error:", error);
     return NextResponse.json({ success: false, message: "Internal Server Error" }, { status: 500 });
   }
 }
+
