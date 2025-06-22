@@ -1,9 +1,9 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { connectDb } from "@/dbConnection/connect";
 import { User } from "@/dbConnection/Schemas/user";
 import { generateToken } from "@/utils/jwt";
 
-export async function POST(request: Request): Promise<NextResponse> {
+export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
         await connectDb();
 
