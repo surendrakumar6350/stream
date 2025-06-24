@@ -12,6 +12,8 @@ function Login() {
         upi: ''
     });
 
+    const [loading, setLoading] = useState(false);
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const { name, value } = e.target;
         setFormData(prev => ({
@@ -22,6 +24,28 @@ function Login() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
+        setLoading(true);
+
+        // Validate Name
+        if (!/^[A-Za-z ]{3,}$/.test(formData.name.trim())) {
+            alert("Please enter your full name (only letters and spaces, min 3 characters).");
+            setLoading(false);
+            return;
+        }
+
+        // Validate Mobile
+        if (!/^[6-9]\d{9}$/.test(formData.mobile)) {
+            alert("Please enter a valid 10-digit Indian mobile number starting with 6-9.");
+            setLoading(false);
+            return;
+        }
+
+        // Validate UPI ID
+        if (!/^[\w.-]+@[\w.-]+$/.test(formData.upi)) {
+            alert("Please enter a valid UPI ID (e.g., name@bank).");
+            setLoading(false);
+            return;
+        }
 
         try {
             const response = await axios.post(`${BASE_URL}/api/register`, formData);
@@ -29,38 +53,36 @@ function Login() {
                 window.location.href = "/";
             } else {
                 console.error("Registration failed:", response.data.message);
-                alert("Login Failed");
+                alert("Join failed. Please try again.");
             }
         } catch (error: any) {
             console.error("API error:", error.response?.data || error.message);
-            alert("Login Failed");
+            alert("Something went wrong. Please try again.");
+        } finally {
+            setLoading(false);
         }
     };
 
     return (
         <div className="min-h-screen bg-gray-900 flex">
-            {/* Left side - Signup Form */}
             <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8">
                 <div className="max-w-md w-full space-y-8">
-                    {/* Logo and Header */}
                     <div className="text-center">
                         <div className="flex items-center justify-center mb-6">
                             <div className="w-10 h-10 bg-gradient-to-r from-green-400 to-emerald-500 rounded-lg flex items-center justify-center">
                                 <Zap className="w-6 h-6 text-white" />
                             </div>
-                            <span className="ml-3 text-2xl font-bold text-white">PayFlow</span>
+                            <span className="ml-3 text-2xl font-bold text-white">Stream</span>
                         </div>
-                        <h2 className="text-3xl font-bold text-white mb-2">Create your account</h2>
-                        <p className="text-gray-400">Get started with your payment journey</p>
+                        <h2 className="text-3xl font-bold text-white mb-2">Join the Contest</h2>
+                        <p className="text-gray-400">Participate, get lucky, and win exciting cash rewards!</p>
                     </div>
 
-                    {/* Signup Form */}
                     <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
                         <div className="space-y-4">
-                            {/* Name Field */}
                             <div>
                                 <label htmlFor="name" className="block text-sm font-medium text-gray-300 mb-2">
-                                    Full Name
+                                    Your Name
                                 </label>
                                 <div className="relative">
                                     <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -79,7 +101,6 @@ function Login() {
                                 </div>
                             </div>
 
-                            {/* Mobile Field */}
                             <div>
                                 <label htmlFor="mobile" className="block text-sm font-medium text-gray-300 mb-2">
                                     Mobile Number
@@ -92,16 +113,16 @@ function Login() {
                                         id="mobile"
                                         name="mobile"
                                         type="tel"
+                                        inputMode="numeric"
                                         required
                                         value={formData.mobile}
                                         onChange={handleInputChange}
                                         className="block w-full pl-10 pr-3 py-3 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                                        placeholder="+91 98765 43210"
+                                        placeholder="Enter 10-digit mobile number"
                                     />
                                 </div>
                             </div>
 
-                            {/* UPI Field */}
                             <div>
                                 <label htmlFor="upi" className="block text-sm font-medium text-gray-300 mb-2">
                                     UPI ID
@@ -118,31 +139,34 @@ function Login() {
                                         value={formData.upi}
                                         onChange={handleInputChange}
                                         className="block w-full pl-10 pr-3 py-3 border border-gray-600 rounded-lg bg-gray-800 text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all duration-200"
-                                        placeholder="yourname@paytm"
+                                        placeholder="yourupi@bank"
                                     />
                                 </div>
                                 <p className="mt-1 text-xs text-gray-400">
-                                    Enter your UPI ID (e.g., 9876543210@paytm, user@gpay)
+                                    UPI used to enter the contest (e.g., name@paytm, number@upi)
                                 </p>
                             </div>
                         </div>
 
-                        {/* Submit Button */}
                         <div>
                             <button
                                 type="submit"
-                                className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 focus:ring-offset-gray-900 transition-all duration-200 transform hover:scale-[1.02] active:scale-[0.98]"
+                                disabled={loading}
+                                className={`group relative cursor-pointer w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white ${loading
+                                    ? 'bg-green-700 cursor-not-allowed opacity-70'
+                                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700'
+                                    } focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 focus:ring-offset-gray-900 transition-all duration-200 transform ${!loading ? 'hover:scale-[1.02] active:scale-[0.98]' : ''
+                                    }`}
                             >
-                                Create Account
+                                {loading ? "Joining..." : "Join Now"}
                             </button>
                         </div>
 
-                        {/* Terms */}
                         <div className="text-center">
                             <p className="text-xs text-gray-400">
-                                By creating an account, you agree to our{' '}
+                                By joining, you agree to our{' '}
                                 <a href="#" className="text-green-400 hover:text-green-300 transition-colors">
-                                    Terms of Service
+                                    Terms & Conditions
                                 </a>{' '}
                                 and{' '}
                                 <a href="#" className="text-green-400 hover:text-green-300 transition-colors">
@@ -170,20 +194,19 @@ function Login() {
                                 </div>
                             </div>
                             <blockquote className="text-gray-300 text-lg leading-relaxed mb-6">
-                                "Seamless payments with instant UPI integration. The fastest way to get started with digital transactions."
+                                "Enter the contest with a small fee and stand a chance to win big! One lucky winner, chosen through a fair draw system, takes home the prize."
                             </blockquote>
                             <div className="flex items-center">
                                 <div className="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center">
-                                    <span className="text-white font-semibold text-sm">P</span>
+                                    <span className="text-white font-semibold text-sm">J</span>
                                 </div>
                                 <div className="ml-3">
-                                    <div className="text-white font-medium">PayFlow User</div>
-                                    <div className="text-gray-400 text-sm">Digital Payment Expert</div>
+                                    <div className="text-white font-medium">Joined Contestant</div>
+                                    <div className="text-gray-400 text-sm">Excited to try my luck!</div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Decorative elements */}
                         <div className="absolute top-20 right-20 w-20 h-20 bg-green-500/20 rounded-full blur-xl"></div>
                         <div className="absolute bottom-20 left-20 w-32 h-32 bg-emerald-500/20 rounded-full blur-xl"></div>
                     </div>
