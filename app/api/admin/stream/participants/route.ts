@@ -2,15 +2,31 @@ import { NextRequest, NextResponse } from 'next/server';
 import { connectDb } from '@/dbConnection/connect';
 import { Stream } from '@/dbConnection/Schemas/stream';
 import { User } from '@/dbConnection/Schemas/user';
+import { cookies } from 'next/headers';
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || 'admin_secret_key';
 
 export async function POST(req: NextRequest) {
   try {
     await connectDb();
+    const cookieStore = await cookies();
+    const token = cookieStore.get("admin")?.value;
 
     const { id } = await req.json();
 
     if (!id) {
       return NextResponse.json({ success: false, message: "Invalid stream ID" }, { status: 400 });
+    }
+
+    if (!token) {
+      return NextResponse.json({ success: false, message: "Unauthorized: No token" }, { status: 401 });
+    }
+
+    try {
+      jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
     }
 
     const stream = await Stream.findById(id).lean();

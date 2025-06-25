@@ -1,14 +1,31 @@
 import { NextResponse } from "next/server";
 import { connectDb } from "@/dbConnection/connect";
 import { Stream } from "@/dbConnection/Schemas/stream";
+import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || 'admin_secret_key';
 
 export async function GET(): Promise<NextResponse> {
   try {
     await connectDb();
 
+    const cookieStore = await cookies();
+    const token = cookieStore.get("admin")?.value;
+
+    if (!token) {
+      return NextResponse.json({ success: false, message: "Unauthorized: No token" }, { status: 401 });
+    }
+
+    try {
+      jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return NextResponse.json({ success: false, message: "Invalid token" }, { status: 401 });
+    }
+
     const recentStreams = await Stream.aggregate([
       { $sort: { createdAt: -1 } },
-      { $limit: 50 },
+      { $limit: 30 },
       {
         $lookup: {
           from: "users",

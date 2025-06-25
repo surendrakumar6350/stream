@@ -27,6 +27,7 @@ const StreamsDashboard: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const loadingRef = useRef<boolean>(true);
+  const [joiningStreamId, setJoiningStreamId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchRunningStreams();
@@ -60,7 +61,7 @@ const StreamsDashboard: React.FC = () => {
 
   const handleJoinStream = async (streamId: string): Promise<void> => {
     try {
-
+      setJoiningStreamId(streamId); // show joining...
       const response = await axios.get(
         `${BASE_URL}/api/payment/create?streamId=${streamId}`
       );
@@ -78,12 +79,14 @@ const StreamsDashboard: React.FC = () => {
           console.error('Form not found in PayU response');
         }
       }
-
     } catch (error) {
-      console.error('Error fetching streams:', error);
+      console.error('Error fetching stream:', error);
       window.location.href = "/login";
+    } finally {
+      setJoiningStreamId(null); // reset
     }
-  }
+  };
+
 
   const formatPrice = (price: number): string => {
     return "₹" + price.toString();
@@ -253,16 +256,23 @@ const StreamsDashboard: React.FC = () => {
                 {/* Join Button - Touch Friendly */}
                 <button
                   onClick={() => handleJoinStream(streamId)}
-                  disabled={isJoined}
-                  className={`w-full py-3 sm:py-3 px-4 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base min-h-[44px] ${isJoined
+                  disabled={isJoined || joiningStreamId === streamId}
+                  className={`w-full py-3 sm:py-3 px-4 rounded-xl font-semibold transition-all duration-200 flex items-center justify-center gap-2 text-sm sm:text-base min-h-[44px] cursor-pointer ${isJoined
                     ? 'bg-green-500/20 text-green-400 border border-green-500/30 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:scale-95'
+                    : joiningStreamId === streamId
+                      ? 'bg-purple-500/40 text-purple-200 cursor-wait'
+                      : 'bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 active:scale-95'
                     }`}
                 >
                   {isJoined ? (
                     <>
                       <Check size={16} className="sm:w-5 sm:h-5" />
                       Joined
+                    </>
+                  ) : joiningStreamId === streamId ? (
+                    <>
+                      <Loader2 size={16} className="animate-spin sm:w-5 sm:h-5" />
+                      Joining...
                     </>
                   ) : (
                     <>
