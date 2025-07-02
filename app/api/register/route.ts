@@ -30,7 +30,7 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             httpOnly: true,
             sameSite: "lax",
             path: "/",
-            maxAge: 4 * 24 * 60 * 60,
+            maxAge: 60 * 60,
         });
 
         return response;

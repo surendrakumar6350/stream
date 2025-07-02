@@ -1,10 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { loginSchema } from "@/zod/adminLogin";
-import jwt from "jsonwebtoken";
+import { generateToken } from "@/utils/jwt";
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "supersecureadmin";
-const JWT_SECRET = process.env.JWT_SECRET || "admin_secret";
-
 
 export async function POST(request: NextRequest): Promise<NextResponse> {
     try {
@@ -27,16 +25,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
             );
         }
 
-        const token = jwt.sign({ role: "admin" }, JWT_SECRET, {
-            expiresIn: "2d",
-        });
+
+        const token = generateToken({ role: "admin" });
 
         const response = NextResponse.json({ success: true, message: "Admin authenticated" });
 
         response.cookies.set("admin", token, {
             httpOnly: true,
             sameSite: "lax",
-            maxAge: 1 * 24 * 60 * 60,
+            maxAge: 60 * 60,
         });
 
         return response;
