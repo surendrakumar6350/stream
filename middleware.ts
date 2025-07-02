@@ -1,27 +1,58 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { jwtVerify } from 'jose';
 
-export function middleware(request: NextRequest) {
-    const userCookie = request.cookies.get('user');
-    const adminCookie = request.cookies.get('admin');
+const JWT_SECRET = process.env.JWT_SECRET || 'your_default_secret_key';
+const secret = new TextEncoder().encode(JWT_SECRET);
+
+async function verifyToken(token: string) {
+    try {
+        const { payload } = await jwtVerify(token, secret);
+        return payload;
+    } catch (err) {
+        return null;
+    }
+}
+
+export async function middleware(request: NextRequest) {
+    const userToken = request.cookies.get('user')?.value;
+    const adminToken = request.cookies.get('admin')?.value;
 
     const path = request.nextUrl.pathname;
 
-    if (path === '/' && !userCookie) {
-        return NextResponse.rewrite(new URL('/login', request.url));
+    // Protect home route for users
+    if (path === '/') {
+        const isValid = userToken && await verifyToken(userToken);
+        if (!isValid) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
     }
 
-    if (path === '/login' && userCookie) {
-        return NextResponse.rewrite(new URL('/', request.url));
+    // Redirect authenticated users away from login page
+    if (path === '/login') {
+        const isValid = userToken && await verifyToken(userToken);
+        if (isValid) {
+            return NextResponse.redirect(new URL('/', request.url));
+        }
     }
 
-    if (path === '/admin' && !adminCookie) {
-        return NextResponse.rewrite(new URL('/admin/login', request.url));
+    // Protect admin dashboard
+    if (path === '/admin') {
+        const isValid = adminToken && await verifyToken(adminToken);
+        if (!isValid) {
+            return NextResponse.redirect(new URL('/admin/login', request.url));
+        }
     }
 
-    if (path === '/admin/login' && adminCookie) {
-        return NextResponse.rewrite(new URL('/admin', request.url));
+    // Redirect authenticated admin away from admin login
+    if (path === '/admin/login') {
+        const isValid = adminToken && await verifyToken(adminToken);
+        if (isValid) {
+            return NextResponse.redirect(new URL('/admin', request.url));
+        }
     }
 
+    // Proceed if no condition matched
+    return NextResponse.next();
 }
 
 export const config = {
